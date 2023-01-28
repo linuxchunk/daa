@@ -1,0 +1,291 @@
+# ----------------------------Rec & non-Rec--------------------------------------
+
+import time
+
+# Recursive algorithm
+def factorial_recursive(n):
+    if n == 0:
+        return 1
+    return n * factorial_recursive(n-1)
+
+# Non-recursive algorithm
+def factorial_non_recursive(n):
+    fact = 1
+    for i in range(1, n+1):
+        fact *= i
+    return fact
+
+# Test
+start_time = time.time()
+print(factorial_recursive(20)) # 2432902008176640000
+print("Recursive algorithm --- %s seconds ---" % (time.time() - start_time))
+
+start_time = time.time()
+print(factorial_non_recursive(20)) # 2432902008176640000
+print("Non-recursive algorithm --- %s seconds ---" % (time.time() - start_time))
+
+# ---------------------------HEAP--------------------------------------------------
+
+def heapify(arr, n, i): 
+    largest = i 
+    l = 2 * i + 1
+    r = 2 * i + 2
+  
+    if l < n and arr[i] < arr[l]: 
+        largest = l 
+  
+    if r < n and arr[largest] < arr[r]: 
+        largest = r 
+  
+    if largest != i: 
+        arr[i],arr[largest] = arr[largest],arr[i]
+        heapify(arr, n, largest) 
+  
+def heapSort(arr): 
+    n = len(arr) 
+  
+    for i in range(n, -1, -1): 
+        heapify(arr, n, i) 
+  
+    for i in range(n-1, 0, -1): 
+        arr[i], arr[0] = arr[0], arr[i]
+        heapify(arr, i, 0) 
+  
+arr = [4,8,2,7,19,22,3,5,9] 
+heapSort(arr) 
+print("Sorted array is:",arr)
+
+#------------------------ COIN CHANGIND ------------------------------------------
+
+def count(coins, n, sum):
+    table = [0 for k in range(sum+1)]
+    table[0] = 1
+    for i in range(0, n):
+        for j in range(coins[i], sum+1):
+            table[j] += table[j-coins[i]]
+    return table[sum]
+
+coins = [1, 2, 4,5]
+n = len(coins)
+sum = 8
+x = count(coins, n, sum)
+print(x)
+
+# ----------------------------WARSHALL-------------------------------------------------
+
+def transitive_closure(graph):
+    V = len(graph)
+    reach = [[False for i in range(V)] for j in range(V)]
+    for i in range(V):
+        for j in graph[i]:
+            reach[i][j] = True
+    for k in range(V):
+        for i in range(V):
+            for j in range(V):
+                reach[i][j] = reach[i][j] or (reach[i][k] and reach[k][j])
+    return reach
+
+graph = [[1, 2, 3], [0, 2, 3], [0, 1, 3], [0, 1, 2]]
+print(transitive_closure(graph))
+
+# ------------------------------------Knapsack-------------------------------------------
+
+def knapsack(w,wt,val,n):
+    if n==0 or w==0:
+        return 0
+    if (wt[n-1]>w):
+        return knapsack (w,wt,val,n-1)
+    else:
+        return max (val[n-1]+knapsack(w-wt[n-1],wt,val,n-1),knapsack(w,wt,val,n-1))
+
+val=[18,16,6]
+wt=[1,2,2]
+w=4
+n=len(val)
+print(knapsack(w,wt,val,n))
+
+# ------------------------------Assignment problem--------------------------------
+from itertools import permutations
+from collections import defaultdict
+
+cost_matrix = [[10, 11, 5, 7], [6, 8, 9, 5], [5, 7, 10, 8], [7, 6, 8, 12]]
+
+permutations_list = list(permutations(range(len(cost_matrix))))
+
+def calculate_cost(assignment):
+    total_cost = 0
+    for i, job in enumerate(assignment):
+        total_cost += cost_matrix[i][job]
+    return total_cost
+
+min_cost = defaultdict(int)
+
+for i in range(len(cost_matrix[0])):
+    min_cost[i] = float('inf')
+
+for permutation in permutations_list:
+    cost = calculate_cost(permutation)
+    for i, job in enumerate(permutation):
+        if cost < min_cost[job]:
+            min_cost[job] = cost
+
+best_assignment = None
+best_cost = float('inf')
+
+for permutation in permutations_list:
+    valid = True
+    for i, job in enumerate(permutation):
+        if cost_matrix[i][job] > min_cost[job]:
+            valid = False
+            break
+    if valid and calculate_cost(permutation) < best_cost:
+        best_assignment = permutation
+        best_cost = calculate_cost(permutation)
+
+print("Best assignment:", best_assignment)
+print("Best cost:", best_cost)
+
+# ------------------------------------------------Hoffman------------------------------------
+import heapq
+
+class Node:
+    def __init__(self, char, prob):
+        self.char = char
+        self.prob = prob
+        self.left = None
+        self.right = None
+
+    def __lt__(self, other):
+        return self.prob < other.prob
+
+def build_huffman_tree(characters, probabilities):
+    nodes = [Node(char, prob) for char, prob in zip(characters, probabilities)]
+    heapq.heapify(nodes)
+
+    while len(nodes) > 1:
+        left = heapq.heappop(nodes)
+        right = heapq.heappop(nodes)
+        parent = Node(None, left.prob + right.prob)
+        parent.left = left
+        parent.right = right
+        heapq.heappush(nodes, parent)
+
+    return nodes[0]
+
+def get_codes(node, code, codes):
+    if node is None:
+        return
+
+    if node.char is not None:
+        codes[node.char] = code
+        return
+
+    get_codes(node.left, code + "0", codes)
+    get_codes(node.right, code + "1", codes)
+
+def main():
+    characters = ['A','B','C','D','E','-']
+    probabilities = [0.1,0.5,0.35,0.5,0.4,0.2]
+
+    root = build_huffman_tree(characters, probabilities)
+    codes = {}
+    get_codes(root, "", codes)
+
+    print(codes)
+
+if __name__ == "__main__":
+    main()
+# ----------------------------------------------SIMPLEX---------------------------------------
+from scipy.optimize import linprog
+
+c = [-63, -90] # objective function coefficients
+A = [[110, 40], [60, 110]] # constraint coefficients
+b = [20200, 30000] # constraint limits
+x0_bounds = (0, None) # non-negativity constraints
+x1_bounds = (0, None)
+
+res = linprog(c, A_ub=A, b_ub=b, bounds=[x0_bounds, x1_bounds], method='simplex')
+
+print("Optimal number of acres of corn: ", res.x[0])
+print("Optimal number of acres of soybeans: ", res.x[1])
+print("Optimal profit: ", -res.fun)
+
+# ----------------------------------------------N-Queen--------------------------------------------
+
+def is_safe(board, row, col, n):
+    for x in range(col):
+        if board[row][x] == 1:
+            return False
+    for x, y in zip(range(row, -1, -1), range(col, -1, -1)):
+        if board[x][y] == 1:
+            return False
+    for x, y in zip(range(row, n, 1), range(col, -1, -1)):
+        if board[x][y] == 1:
+            return False
+    return True
+
+def solve(board, col, n):
+    if col == n:
+        return True
+    for i in range(n):
+        if is_safe(board, i, col, n):
+            board[i][col] = 1
+            if solve(board, col+1, n):
+                return True
+            board[i][col] = 0
+    return False
+
+def n_queen(n):
+    board = [[0 for i in range(n)] for j in range(n)]
+    if not solve(board, 0, n):
+        print("Solution does not exist")
+    else:
+        for i in range(n):
+            print(board[i])
+
+n_queen(5) # You can replace the number 5 with desired number of queens
+
+# ----------------------------------------------TOPOLOGICAL SORTING ----------------------------
+
+# A Python program to print topological sorting of a DAG 
+from collections import defaultdict
+
+class Graph:
+    def __init__(self, vertices):
+        self.V = vertices
+        self.graph = defaultdict(list)
+
+    def addEdge(self, v, w):
+        self.graph[v].append(w)
+
+    def topologicalSortUtil(self, v, visited, stack):
+        visited[v] = True
+
+        if v in self.graph.keys():
+            for neighbour in self.graph[v]:
+                if visited[neighbour] == False:
+                    self.topologicalSortUtil(neighbour, visited, stack)
+
+        stack.append(v)
+
+    def topologicalSort(self):
+        visited = [False]*self.V
+        stack = []
+
+        for i in range(self.V):
+            if visited[i] == False:
+                self.topologicalSortUtil(i, visited, stack)
+
+        print("Topological Sort of the given graph:")
+        while stack:
+            print(stack.pop(), end=' ')
+
+n = int(input("Enter the number of edges: "))
+g = Graph(n)
+for i in range(n):
+    v1, v2 = map(int, input().split())
+    g.addEdge(v1, v2)
+
+g.topologicalSort()
+
+
